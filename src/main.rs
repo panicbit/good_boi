@@ -6,6 +6,8 @@ pub struct Core {
     ip: u16,
     sp: u16,
     reg_a: u8,
+    reg_b: u8,
+    reg_c: u8,
     reg_hl: u16,
     reg_f: u8,
     rom: Vec<u8>,
@@ -20,6 +22,8 @@ impl Core {
             ip: 0x100,
             sp: 0xFFFE,
             reg_a: 0,
+            reg_b: 0,
+            reg_c: 0,
             reg_hl: 0,
             reg_f: 0,
             rom,
@@ -54,6 +58,10 @@ impl Core {
         (self.reg_a as u16) << 8 | self.reg_f as u16
     }
 
+    pub fn reg_bc(&self) -> u16 {
+        (self.reg_b as u16) << 8 | self.reg_c as u16
+    }
+
     pub fn execute(&mut self, instr: Instruction) {
         if self.trace_instructions {
             println!(">> {:?}", instr);
@@ -81,8 +89,9 @@ impl Core {
 
     pub fn execute_cp(&mut self, source: Operand) {
         let value = self.load_u8_operand(source);
+        let comp = self.reg_a - value;
 
-        unimplemented!("execute_cp: {:?}", source);
+        // TODO: set flags correctly
     }
 
     pub fn execute_jr(&mut self, cond: Cond, offset: Operand) {
@@ -138,6 +147,7 @@ impl Core {
     pub fn execute_push(&mut self, source: Reg16) {
         match source {
             Reg16::AF => self.push_u16(self.reg_af()),
+            Reg16::BC => self.push_u16(self.reg_bc()),
             _ => unimplemented!("execute_push: {:?}", source),
         }
     }
@@ -154,6 +164,8 @@ impl Core {
     pub fn evaluate_cond(&self, cond: Cond) -> bool {
         match cond {
             Cond::Always => true,
+            Cond::ZSet => (self.reg_f >> 7) & 1 == 1,
+            Cond::ZReset => (self.reg_f >> 7) & 1 == 0,
             _ => unimplemented!("Cond::{:?}", cond),
         }
     }
