@@ -290,7 +290,6 @@ pub fn decode_extended(code: u8) -> ExtendedInstruction {
     use Operand::*;
     use self::Reg8::*;
     use self::Reg16::*;
-    use self::Cond::*;
     
     match code {
         0x00 => Rlc(Reg8(B)),
@@ -552,7 +551,7 @@ pub fn decode_extended(code: u8) -> ExtendedInstruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Instruction {
     Nop,
     Ld(Operand, Operand),
@@ -600,7 +599,7 @@ impl Instruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum ExtendedInstruction {
     Rlc(Operand),
     Rrc(Operand),
@@ -621,7 +620,7 @@ impl ExtendedInstruction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Operand {
     Reg8(Reg8),
     RegRef8(Reg8),
@@ -634,7 +633,7 @@ pub enum Operand {
     Cond(Cond),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Reg8 {
     A,
     B,
@@ -645,7 +644,7 @@ pub enum Reg8 {
     L,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Reg16 {
     BC,
     DE,
@@ -656,7 +655,7 @@ pub enum Reg16 {
     AF,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum Cond {
     ZSet,
     ZReset,
