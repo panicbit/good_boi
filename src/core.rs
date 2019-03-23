@@ -128,8 +128,24 @@ impl Core {
         self.ram[addr as usize] = value;
     }
 
+    pub fn peek_mem_u8(&self, addr: u16) -> u8 {
+        self.ram[addr as usize]
+    }
+
     fn read_mem_u8(&mut self, addr: u16) -> u8 {
         self.ram[addr as usize]
+    }
+
+    pub fn peek_mem_u16(&self, addr: u16) -> u16 {
+        let lo = self.peek_mem_u8(addr) as u16;
+        let hi = self.peek_mem_u8(addr + 1) as u16;
+        hi << 8 | lo
+    }
+
+    fn read_mem_u16(&mut self, addr: u16) -> u16 {
+        let lo = self.read_mem_u8(addr) as u16;
+        let hi = self.read_mem_u8(addr + 1) as u16;
+        hi << 8 | lo
     }
 
     pub fn execute_cp(&mut self, source: Operand) {
@@ -315,9 +331,7 @@ impl Core {
     }
 
     pub fn decode_imm16(&mut self) -> u16 {
-        let lo = self.read_mem_u8(self.ip) as u16;
-        let hi = self.read_mem_u8(self.ip + 1) as u16;
-        let value = hi << 8 | lo;
+        let value = self.read_mem_u16(self.ip);
 
         self.ip += 2;
 
