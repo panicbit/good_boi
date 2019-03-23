@@ -207,7 +207,7 @@ impl Core {
         let offset = self.load_u8_operand(offset) as i8;
 
         if cond {
-            if offset >= 0 {
+            if offset.is_positive() {
                 self.ip += offset as u16;
             } else {
                 self.ip -= offset.abs() as u16;
