@@ -273,7 +273,7 @@ impl Core {
             Operand::Reg8(Reg8::E) => self.reg_e = value,
             Operand::Reg8(Reg8::H) => self.reg_h = value,
             Operand::Reg8(Reg8::L) => self.reg_l = value,
-            Operand::RegRef16(Reg16::DE) => self.set_reg_de(value as u16),
+            Operand::RegRef16(Reg16::DE) => self.write_mem_u8(self.reg_de(), value),
             Operand::Imm16Ref => {
                 let ptr = self.decode_imm16();
                 self.write_mem_u8(ptr, value);
