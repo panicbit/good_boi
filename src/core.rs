@@ -83,6 +83,54 @@ impl Core {
         self.reg_e = value as u8;
     }
 
+    pub fn flag_z(&self) -> bool {
+        self.reg_f & (1 << 7) != 0
+    }
+
+    pub fn set_flag_z(&mut self, set: bool) {
+        if set {
+            self.reg_f |=   1 << 7;
+        } else {
+            self.reg_f &= !(1 << 7);
+        }
+    }
+
+    pub fn flag_n(&self) -> bool {
+        self.reg_f & (1 << 6) != 0
+    }
+
+    pub fn set_flag_n(&mut self, set: bool) {
+        if set {
+            self.reg_f |=   1 << 6;
+        } else {
+            self.reg_f &= !(1 << 6);
+        }
+    }
+
+    pub fn flag_h(&self) -> bool {
+        self.reg_f & (1 << 5) != 0
+    }
+
+    pub fn set_flag_h(&mut self, set: bool) {
+        if set {
+            self.reg_f |=   1 << 5;
+        } else {
+            self.reg_f &= !(1 << 5);
+        }
+    }
+
+    pub fn flag_c(&self) -> bool {
+        self.reg_f & (1 << 4) != 0
+    }
+
+    pub fn set_flag_c(&mut self, set: bool) {
+        if set {
+            self.reg_f |=   1 << 4;
+        } else {
+            self.reg_f &= !(1 << 4);
+        }
+    }
+
     pub fn print_state(&self) {
         let instruction = self.current_instruction();
         println!("af= {af:04X}", af = self.reg_af());
@@ -249,8 +297,8 @@ impl Core {
     pub fn evaluate_cond(&self, cond: Cond) -> bool {
         match cond {
             Cond::Always => true,
-            Cond::ZSet => (self.reg_f >> 7) & 1 == 1,
-            Cond::ZReset => (self.reg_f >> 7) & 1 == 0,
+            Cond::ZSet => self.flag_z(),
+            Cond::ZReset => !self.flag_z(),
             _ => unimplemented!("Cond::{:?}", cond),
         }
     }
