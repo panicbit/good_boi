@@ -13,8 +13,6 @@ pub struct Core {
     reg_l: u8,
     ram: Vec<u8>,
     interrupts_enabled: bool,
-    trace_instructions: bool,
-    trace_state: bool,
 }
 
 impl Core {
@@ -36,22 +34,17 @@ impl Core {
             reg_f: 0,
             ram,
             interrupts_enabled: true,
-            trace_instructions: true,
-            trace_state: true,
         }
     }
 
-    pub fn run(&mut self) {
-        loop {
-            self.step();
-        }
+    pub fn current_instruction(&self) -> Instruction {
+        let code = self.peek_mem_u8(self.ip);
+        Instruction::decode(code)
     }
 
     pub fn step(&mut self) {
-        let code = self.read_mem_u8(self.ip);
-        let instr = Instruction::decode(code);
-
-        self.execute(instr);
+        let instruction = self.current_instruction();
+        self.execute(instruction);
     }
 
     pub fn reg_hl(&self) -> u16 {
@@ -90,11 +83,21 @@ impl Core {
         self.reg_e = value as u8;
     }
 
-    pub fn execute(&mut self, instr: Instruction) {
-        if self.trace_instructions {
-            println!(">> {:?}", instr);
-        }
+    pub fn print_state(&self) {
+        let instruction = self.current_instruction();
+        println!("af= {af:04X}", af = self.reg_af());
+        println!("bc= {bc:04X}", bc = self.reg_bc());
+        println!("de= {de:04X}", de = self.reg_de());
+        println!("hl= {hl:04X}", hl = self.reg_hl());
+        println!("sp= {sp:04X}", sp = self.sp);
+        println!("pc= {sp:04X}", sp = self.ip);
+        println!("nn= {nn:04X}", nn = self.peek_mem_u16(self.ip+1));
+        println!("ZNHC");
+        println!("{:04b}", self.reg_f >> 4);
+        println!("→ {:?}", instruction);
+    }
 
+    pub fn execute(&mut self, instr: Instruction) {
         self.ip += 1;
 
         match instr {
@@ -111,10 +114,6 @@ impl Core {
             Instruction::Dec(target) => self.execute_dec(target),
             Instruction::Xor(value) => self.execute_xor(value),
             _ => unimplemented!("execute: {:?}", instr),
-        }
-
-        if self.trace_state {
-            println!("|| ip@{:02X} sp@{:02X}", self.ip, self.sp);
         }
     }
 
