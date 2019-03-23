@@ -8,9 +8,12 @@ pub struct Core {
     reg_a: u8,
     reg_b: u8,
     reg_c: u8,
-    reg_hl: u16,
+    reg_d: u8,
+    reg_e: u8,
     reg_f: u8,
-    rom: Vec<u8>,
+    reg_h: u8,
+    reg_l: u8,
+    ram: Vec<u8>,
     interrupts_enabled: bool,
     trace_instructions: bool,
     trace_state: bool,
@@ -18,15 +21,22 @@ pub struct Core {
 
 impl Core {
     pub fn new(rom: Vec<u8>) -> Self {
+        let mut ram = vec![0; 0x10000];
+
+        ram[..rom.len()].copy_from_slice(&rom);
+
         Self {
             ip: 0x100,
             sp: 0xFFFE,
             reg_a: 0,
             reg_b: 0,
             reg_c: 0,
-            reg_hl: 0,
+            reg_d: 0,
+            reg_e: 0,
+            reg_h: 0,
+            reg_l: 0,
             reg_f: 0,
-            rom,
+            ram,
             interrupts_enabled: true,
             trace_instructions: true,
             trace_state: true,
@@ -40,26 +50,46 @@ impl Core {
     }
 
     pub fn step(&mut self) {
-        let code = self.rom[self.ip as usize];
+        let code = self.read_mem_u8(self.ip);
         let instr = Instruction::decode(code);
 
         self.execute(instr);
     }
 
-    pub fn reg_h(&self) -> u8 {
-        (self.reg_hl >> 8) as u8
+    pub fn reg_hl(&self) -> u16 {
+        (self.reg_h as u16) << 8 | self.reg_l as u16
     }
 
-    pub fn reg_l(&self) -> u8 {
-        self.reg_hl as u8
+    pub fn set_reg_hl(&mut self, value: u16) {
+        self.reg_h = (value >> 8) as u8;
+        self.reg_l = value as u8;
     }
 
     pub fn reg_af(&self) -> u16 {
         (self.reg_a as u16) << 8 | self.reg_f as u16
     }
 
+    pub fn set_reg_af(&mut self, value: u16) {
+        self.reg_a = (value >> 8) as u8;
+        self.reg_f = value as u8;
+    }
+
     pub fn reg_bc(&self) -> u16 {
         (self.reg_b as u16) << 8 | self.reg_c as u16
+    }
+
+    pub fn set_reg_bc(&mut self, value: u16) {
+        self.reg_b = (value >> 8) as u8;
+        self.reg_c = value as u8;
+    }
+
+    pub fn reg_de(&self) -> u16 {
+        (self.reg_d as u16) << 8 | self.reg_e as u16
+    }
+
+    pub fn set_reg_de(&mut self, value: u16) {
+        self.reg_d = (value >> 8) as u8;
+        self.reg_e = value as u8;
     }
 
     pub fn execute(&mut self, instr: Instruction) {
@@ -79,12 +109,29 @@ impl Core {
             Instruction::Ldh(target, source) => self.execute_ldh(target, source),
             Instruction::Push(source) => self.execute_push(source),
             Instruction::Cp(source) => self.execute_cp(source),
+            Instruction::Inc(target) => self.execute_inc(target),
+            Instruction::Dec(target) => self.execute_dec(target),
+            Instruction::Xor(value) => self.execute_xor(value),
             _ => unimplemented!("execute: {:?}", instr),
         }
 
         if self.trace_state {
             println!("|| ip@{:02X} sp@{:02X}", self.ip, self.sp);
         }
+    }
+
+    fn write_mem_u8(&mut self, addr: u16, value: u8) {
+        println!("${:04X} = {:02X}", addr, value);
+
+        if addr == 0xFF01 && value == 0x81 {
+            println!("\n {} \n", self.ram[0xFF01] as char);
+        }
+
+        self.ram[addr as usize] = value;
+    }
+
+    fn read_mem_u8(&mut self, addr: u16) -> u8 {
+        self.ram[addr as usize]
     }
 
     pub fn execute_cp(&mut self, source: Operand) {
@@ -135,10 +182,10 @@ impl Core {
     pub fn execute_ldh(&mut self, target: Operand, source: Operand) {
         match (target, source) {
             (Operand::Imm8Ref, _) => {
-                let ptr = self.decode_imm8() as usize + 0xFF00;
+                let ptr = self.decode_imm8() as u16 + 0xFF00;
                 let value = self.load_u8_operand(source);
 
-                self.rom[ptr] = value;
+                self.write_mem_u8(ptr, value);
             },
             _ => unimplemented!("execute_ldh: {:?} <- {:?}", target, source),
         }
@@ -148,8 +195,29 @@ impl Core {
         match source {
             Reg16::AF => self.push_u16(self.reg_af()),
             Reg16::BC => self.push_u16(self.reg_bc()),
+            Reg16::DE => self.push_u16(self.reg_de()),
+            Reg16::HL => self.push_u16(self.reg_hl()),
             _ => unimplemented!("execute_push: {:?}", source),
         }
+    }
+
+    pub fn execute_inc(&mut self, target: Operand) {
+        match self.load_operand(target) {
+            Value::U8(value) => self.store_operand_u8(target, value + 1),
+            Value::U16(value) => self.store_operand_u16(target, value + 1),
+        }
+    }
+
+    pub fn execute_dec(&mut self, target: Operand) {
+        match self.load_operand(target) {
+            Value::U8(value) => self.store_operand_u8(target, value - 1),
+            Value::U16(value) => self.store_operand_u16(target, value - 1),
+        }
+    }
+
+    pub fn execute_xor(&mut self, value: Operand) {
+        // TODO
+        self.load_operand(value);
     }
 
     pub fn push_u16(&mut self, value: u16) {
@@ -157,8 +225,8 @@ impl Core {
         let hi = (value >> 8) as u8;
 
         self.sp -= 2;
-        self.rom[self.sp as usize] = lo;
-        self.rom[self.sp as usize + 1] = hi;
+        self.write_mem_u8(self.sp, lo);
+        self.write_mem_u8(self.sp + 1, hi);
     }
 
     pub fn evaluate_cond(&self, cond: Cond) -> bool {
@@ -174,9 +242,19 @@ impl Core {
         match source {
             Operand::Imm8 => Value::U8(self.decode_imm8()),
             Operand::Imm16 => Value::U16(self.decode_imm16()),
-            Operand::Reg8(Reg8::H) => Value::U8(self.reg_h()),
-            Operand::Reg8(Reg8::L) => Value::U8(self.reg_l()),
             Operand::Reg8(Reg8::A) => Value::U8(self.reg_a),
+            Operand::Reg8(Reg8::B) => Value::U8(self.reg_b),
+            Operand::Reg8(Reg8::C) => Value::U8(self.reg_c),
+            Operand::Reg8(Reg8::D) => Value::U8(self.reg_d),
+            Operand::Reg8(Reg8::E) => Value::U8(self.reg_e),
+            Operand::Reg8(Reg8::H) => Value::U8(self.reg_h),
+            Operand::Reg8(Reg8::L) => Value::U8(self.reg_l),
+            Operand::RegRef16(Reg16::HL) => Value::U8(self.read_mem_u8(self.reg_hl())),
+            Operand::RegRef16(Reg16::HLInc) => {
+                let addr = self.reg_hl();
+                self.set_reg_hl(addr + 1);
+                Value::U8(self.read_mem_u8(addr))
+            },
             _ => unimplemented!("load_operand: {:?}", source),
         }
     }
@@ -191,9 +269,16 @@ impl Core {
     pub fn store_operand_u8(&mut self, target: Operand, value: u8) {
         match target {
             Operand::Reg8(Reg8::A) => self.reg_a = value,
+            Operand::Reg8(Reg8::B) => self.reg_b = value,
+            Operand::Reg8(Reg8::C) => self.reg_c = value,
+            Operand::Reg8(Reg8::D) => self.reg_d = value,
+            Operand::Reg8(Reg8::E) => self.reg_e = value,
+            Operand::Reg8(Reg8::H) => self.reg_h = value,
+            Operand::Reg8(Reg8::L) => self.reg_l = value,
+            Operand::RegRef16(Reg16::DE) => self.set_reg_de(value as u16),
             Operand::Imm16Ref => {
-                let ptr = self.decode_imm16() as usize;
-                self.rom[ptr] = value;
+                let ptr = self.decode_imm16();
+                self.write_mem_u8(ptr, value);
             }
             _ => unimplemented!("store_operand_u8: {:?} <- {:?}", target, value)
         }
@@ -201,7 +286,8 @@ impl Core {
 
     pub fn store_operand_u16(&mut self, target: Operand, value: u16) {
         match target {
-            Operand::Reg16(Reg16::HL) => self.reg_hl = value,
+            Operand::Reg16(Reg16::DE) => self.set_reg_de(value),
+            Operand::Reg16(Reg16::HL) => self.set_reg_hl(value),
             Operand::Reg16(Reg16::SP) => self.sp = value,
             _ => unimplemented!("store_operand_u16: {:?} <- {:?}", target, value)
         }
@@ -223,7 +309,7 @@ impl Core {
     }
 
     pub fn decode_imm8(&mut self) -> u8 {
-        let value = self.rom[self.ip as usize];
+        let value = self.read_mem_u8(self.ip);
 
         self.ip += 1;
 
@@ -231,8 +317,8 @@ impl Core {
     }
 
     pub fn decode_imm16(&mut self) -> u16 {
-        let lo = self.rom[self.ip as usize] as u16;
-        let hi = self.rom[self.ip as usize + 1] as u16;
+        let lo = self.read_mem_u8(self.ip) as u16;
+        let hi = self.read_mem_u8(self.ip + 1) as u16;
         let value = hi << 8 | lo;
 
         self.ip += 2;
@@ -257,7 +343,9 @@ impl Value {
 }
 
 fn main() {
-    let data = include_bytes!("../gb-test-roms/cpu_instrs/cpu_instrs.gb");
+    // let data = include_bytes!("../gb-test-roms/cpu_instrs/cpu_instrs.gb");
+    let data = include_bytes!("../gb-test-roms/cpu_instrs/individual/06-ld r,r.gb");
+
     let mut core = Core::new(data.to_vec());
 
     core.run();
