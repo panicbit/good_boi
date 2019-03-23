@@ -156,10 +156,14 @@ impl Core {
 
     pub fn execute_jr(&mut self, cond: Cond, offset: Operand) {
         let cond = self.evaluate_cond(cond);
-        let offset = self.load_u8_operand(offset);
+        let offset = self.load_u8_operand(offset) as i8;
 
         if cond {
-            self.ip += offset as u16;
+            if offset >= 0 {
+                self.ip += offset as u16;
+            } else {
+                self.ip -= offset.abs() as u16;
+            }
         }
     }
 
