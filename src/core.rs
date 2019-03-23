@@ -281,7 +281,13 @@ impl Core {
 
     pub fn execute_dec(&mut self, target: Operand) {
         match self.load_operand(target) {
-            Value::U8(value) => self.store_operand_u8(target, value - 1),
+            Value::U8(value) => {
+                let (value, overflow) = value.overflowing_sub(1);
+                self.set_flag_z(overflow);
+                self.set_flag_n(true);
+                self.set_flag_h(overflow);
+                self.store_operand_u8(target, value)
+            },
             Value::U16(value) => self.store_operand_u16(target, value - 1),
         }
     }
