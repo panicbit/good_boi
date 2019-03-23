@@ -551,7 +551,7 @@ pub fn decode_extended(code: u8) -> ExtendedInstruction {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Instruction {
     Nop,
     Ld(Operand, Operand),
@@ -599,7 +599,7 @@ impl Instruction {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ExtendedInstruction {
     Rlc(Operand),
     Rrc(Operand),
@@ -620,7 +620,7 @@ impl ExtendedInstruction {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Operand {
     Reg8(Reg8),
     RegRef8(Reg8),
@@ -633,7 +633,7 @@ pub enum Operand {
     Cond(Cond),
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Reg8 {
     A,
     B,
@@ -644,7 +644,7 @@ pub enum Reg8 {
     L,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Reg16 {
     BC,
     DE,
@@ -655,7 +655,7 @@ pub enum Reg16 {
     AF,
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum Cond {
     ZSet,
     ZReset,

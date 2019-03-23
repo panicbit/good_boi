@@ -42,6 +42,11 @@ impl Core {
         Instruction::decode(code)
     }
 
+    pub fn current_extended_instruction(&self) -> ExtendedInstruction {
+        let code = self.peek_mem_u8(self.ip + 1);
+        ExtendedInstruction::decode(code)
+    }
+
     pub fn step(&mut self) {
         let instruction = self.current_instruction();
         self.execute(instruction);
@@ -132,7 +137,6 @@ impl Core {
     }
 
     pub fn print_state(&self) {
-        let instruction = self.current_instruction();
         println!("af= {af:04X}", af = self.reg_af());
         println!("bc= {bc:04X}", bc = self.reg_bc());
         println!("de= {de:04X}", de = self.reg_de());
@@ -142,13 +146,20 @@ impl Core {
         println!("nn= {nn:04X}", nn = self.peek_mem_u16(self.ip+1));
         println!("ZNHC");
         println!("{:04b}", self.reg_f >> 4);
+
+        let instruction = self.current_instruction();
+
         println!("→ {:?}", instruction);
+
+        if instruction == Instruction::Extended {
+            println!("→ {:?}", self.current_extended_instruction());
+        }
     }
 
-    pub fn execute(&mut self, instr: Instruction) {
+    pub fn execute(&mut self, instruction: Instruction) {
         self.ip += 1;
 
-        match instr {
+        match instruction {
             Instruction::Nop => {},
             Instruction::Jr(cond, offset) => self.execute_jr(cond, offset),
             Instruction::Jp(cond, addr) => self.execute_jp(cond, addr),
@@ -161,10 +172,27 @@ impl Core {
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
             Instruction::Xor(value) => self.execute_xor(value),
+            Instruction::Extended => {
+                let code = self.read_mem_u8(self.ip);
+                let instruction = ExtendedInstruction::decode(code);
+                self.execute_extended(instruction);
+            }
             _ => {
                 self.ip -= 1;
                 self.print_state();
-                unimplemented!("execute: {:?}", instr)
+                unimplemented!("execute: {:?}", instruction)
+            },
+        }
+    }
+
+    fn execute_extended(&mut self, instruction: ExtendedInstruction) {
+        self.ip += 1;
+
+        match instruction {
+            _ => {
+                self.ip -= 2;
+                self.print_state();
+                unimplemented!("execute_extended: {:?}", instruction)
             },
         }
     }
