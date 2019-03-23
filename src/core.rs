@@ -161,7 +161,11 @@ impl Core {
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
             Instruction::Xor(value) => self.execute_xor(value),
-            _ => unimplemented!("execute: {:?}", instr),
+            _ => {
+                self.ip -= 1;
+                self.print_state();
+                unimplemented!("execute: {:?}", instr)
+            },
         }
     }
 
