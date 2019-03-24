@@ -146,6 +146,12 @@ impl Core {
         value
     }
 
+    fn reg_hl_postdecrement(&mut self) -> u16 {
+        let value = self.reg_hl();
+        self.set_reg_hl(value.wrapping_sub(1));
+        value
+    }
+
     pub fn print_state(&self) {
         println!("af= {af:04X}", af = self.reg_af());
         println!("bc= {bc:04X}", bc = self.reg_bc());
@@ -446,12 +452,25 @@ impl Core {
             Operand::Reg8(Reg8::E) => Value::U8(self.reg_e),
             Operand::Reg8(Reg8::H) => Value::U8(self.reg_h),
             Operand::Reg8(Reg8::L) => Value::U8(self.reg_l),
+            Operand::Reg16(reg16) => Value::U16(self.load_u16_register(reg16)),
             Operand::RegRef16(Reg16::HL) => Value::U8(self.read_mem_u8(self.reg_hl())),
             Operand::RegRef16(Reg16::HLInc) => {
                 let addr = self.reg_hl_postincrement();
                 Value::U8(self.read_mem_u8(addr))
             },
             _ => unimplemented!("load_operand: {:?}", source),
+        }
+    }
+
+    fn load_u16_register(&mut self, reg16: Reg16) -> u16 {
+        match reg16 {
+            Reg16::AF => self.reg_af(),
+            Reg16::BC => self.reg_bc(),
+            Reg16::DE => self.reg_de(),
+            Reg16::HL => self.reg_hl(),
+            Reg16::HLInc => self.reg_hl_postincrement(),
+            Reg16::HLDec => self.reg_hl_postdecrement(),
+            Reg16::SP => self.sp,
         }
     }
 
