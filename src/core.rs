@@ -404,17 +404,16 @@ impl Core {
         let lo = value as u8;
         let hi = (value >> 8) as u8;
 
+        self.write_mem_u8(self.sp - 1, hi);
+        self.write_mem_u8(self.sp - 2, lo);
         self.sp -= 2;
-        self.write_mem_u8(self.sp, lo);
-        self.write_mem_u8(self.sp + 1, hi);
     }
 
     pub fn pop_u16(&mut self) -> u16 {
-        let lo = self.read_mem_u8(self.sp) as u16;
-        let hi = self.read_mem_u8(self.sp + 1) as u16;
-        let value = hi << 8 | lo;
-
         self.sp += 2;
+        let lo = self.read_mem_u8(self.sp - 2) as u16;
+        let hi = self.read_mem_u8(self.sp - 1) as u16;
+        let value = hi << 8 | lo;
 
         value
     }
