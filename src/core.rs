@@ -258,7 +258,7 @@ impl Core {
         println!("${:04X} = {:02X}", addr, value);
 
         if addr == 0xFF01 && value == 0x81 {
-            println!("\n {} \n", self.ram[0xFF01] as char);
+            println!("### {}", self.ram[0xFF01] as char);
         }
 
         self.ram[addr as usize] = value;
