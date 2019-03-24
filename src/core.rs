@@ -384,7 +384,8 @@ impl Core {
             Cond::Always => true,
             Cond::ZSet => self.flag_z(),
             Cond::ZReset => !self.flag_z(),
-            _ => unimplemented!("Cond::{:?}", cond),
+            Cond::CSet => self.flag_c(),
+            Cond::CReset => !self.flag_c(),
         }
     }
 
