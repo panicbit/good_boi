@@ -307,9 +307,11 @@ impl Core {
 
     pub fn execute_cp(&mut self, source: Operand) {
         let value = self.load_u8_operand(source);
-        let comp = self.reg_a - value;
 
-        // TODO: set flags correctly
+        self.set_flag_z(self.reg_a == value);
+        self.set_flag_n(true);
+        self.set_flag_h(self.reg_a & 0xF > value & 0xF);
+        self.set_flag_c(self.reg_a < value);
     }
 
     pub fn execute_jr(&mut self, cond: Cond, offset: Operand) {
