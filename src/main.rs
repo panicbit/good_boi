@@ -23,6 +23,7 @@ fn main() {
 
         let result = match &*input {
             ["p", addr] => print_mem_u8(&core, addr),
+            ["run"] => loop { core.step() },
             [] | ["n"] => {
                 core.step();
                 core.print_state();
