@@ -512,6 +512,7 @@ impl Core {
 
     pub fn store_operand_u16(&mut self, target: Operand, value: u16) {
         match target {
+            Operand::Reg16(Reg16::BC) => self.set_reg_bc(value),
             Operand::Reg16(Reg16::DE) => self.set_reg_de(value),
             Operand::Reg16(Reg16::HL) => self.set_reg_hl(value),
             Operand::Reg16(Reg16::SP) => self.sp = value,
