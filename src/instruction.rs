@@ -32,7 +32,7 @@ pub fn decode(code: u8) -> Instruction {
         0x15 => Dec(Reg8(D)),
         0x16 => Ld(Reg8(D), Imm8),
         0x17 => Rla,
-        0x18 => Jr(Always, Reg8(A)),
+        0x18 => Jr(Always, Imm8),
         0x19 => Add(Reg16(HL), Reg16(DE)),
         0x1A => Ld(Reg8(A), RegRef16(DE)),
         0x1B => Dec(Reg16(DE)),
