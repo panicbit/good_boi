@@ -172,6 +172,7 @@ impl Core {
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
             Instruction::Xor(value) => self.execute_xor(value),
+            Instruction::Rra => self.execute_rotate_right_a(),
             Instruction::Extended => {
                 let code = self.read_mem_u8(self.ip);
                 let instruction = ExtendedInstruction::decode(code);
@@ -183,6 +184,19 @@ impl Core {
                 unimplemented!("execute: {:?}", instruction)
             },
         }
+    }
+
+    fn execute_rotate_right_a(&mut self) {
+        let value = self.reg_a;
+        let carry = value & 1 == 1;
+        let value = value | self.flag_c() as u8;
+        let value = value.rotate_right(1);
+
+        self.set_flag_z(value == 0); // Some docs say Z=0
+        self.set_flag_n(false);
+        self.set_flag_h(false);
+        self.set_flag_c(carry);
+        self.reg_a = value;
     }
 
     fn execute_extended(&mut self, instruction: ExtendedInstruction) {
