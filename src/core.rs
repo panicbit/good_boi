@@ -190,6 +190,7 @@ impl Core {
 
         match instruction {
             ExtendedInstruction::Srl(target) => self.execute_shift_right_logical(target),
+            ExtendedInstruction::Rr(target) => self.execute_rotate_right(target),
             _ => {
                 self.ip -= 2;
                 self.print_state();
@@ -202,6 +203,19 @@ impl Core {
         let value = self.load_u8_operand(target);
         let carry = value & 1 == 1;
         let value = value >> 1;
+
+        self.set_flag_z(value == 0);
+        self.set_flag_n(false);
+        self.set_flag_h(false);
+        self.set_flag_c(carry);
+        self.store_operand_u8(target, value);
+    }
+
+    fn execute_rotate_right(&mut self, target: Operand) {
+        let value = self.load_u8_operand(target);
+        let carry = value & 1 == 1;
+        let value = value | self.flag_c() as u8;
+        let value = value.rotate_right(1);
 
         self.set_flag_z(value == 0);
         self.set_flag_n(false);
