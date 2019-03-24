@@ -188,6 +188,7 @@ impl Core {
             Instruction::Cp(source) => self.execute_cp(source),
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
+            Instruction::Or(value) => self.execute_or(value),
             Instruction::Rra => self.execute_rotate_right_a(),
             Instruction::Ret(cond) => self.execute_ret(cond),
             Instruction::Extended => {
@@ -201,6 +202,16 @@ impl Core {
                 unimplemented!("execute: {:?}", instruction)
             },
         }
+    }
+
+    fn execute_or(&mut self, value: Operand) {
+        let value = self.load_u8_operand(value);
+        self.reg_a |= value;
+
+        self.set_flag_z(self.reg_a == 0);
+        self.set_flag_n(false);
+        self.set_flag_h(false);
+        self.set_flag_c(false);
     }
 
     fn execute_ret(&mut self, cond: Cond) {
