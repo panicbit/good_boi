@@ -336,12 +336,15 @@ impl Core {
     }
 
     pub fn execute_push(&mut self, source: Reg16) {
-        match source {
-            Reg16::AF => self.push_u16(self.reg_af()),
-            Reg16::BC => self.push_u16(self.reg_bc()),
-            Reg16::DE => self.push_u16(self.reg_de()),
-            Reg16::HL => self.push_u16(self.reg_hl()),
+        let value = match source {
+            Reg16::AF => self.reg_af(),
+            Reg16::BC => self.reg_bc(),
+            Reg16::DE => self.reg_de(),
+            Reg16::HL => self.reg_hl(),
             _ => unimplemented!("execute_push: {:?}", source),
+        };
+
+        self.push_u16(value);
     }
 
     pub fn execute_pop(&mut self, target: Reg16) {
