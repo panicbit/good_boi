@@ -189,12 +189,25 @@ impl Core {
         self.ip += 1;
 
         match instruction {
+            ExtendedInstruction::Srl(target) => self.execute_shift_right_logical(target),
             _ => {
                 self.ip -= 2;
                 self.print_state();
                 unimplemented!("execute_extended: {:?}", instruction)
             },
         }
+    }
+
+    fn execute_shift_right_logical(&mut self, target: Operand) {
+        let value = self.load_u8_operand(target);
+        let carry = value & 1 == 1;
+        let value = value >> 1;
+
+        self.set_flag_z(value == 0);
+        self.set_flag_n(false);
+        self.set_flag_h(false);
+        self.set_flag_c(carry);
+        self.store_operand_u8(target, value);
     }
 
     fn write_mem_u8(&mut self, addr: u16, value: u8) {
