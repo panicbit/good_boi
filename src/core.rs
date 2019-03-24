@@ -188,7 +188,6 @@ impl Core {
             Instruction::Cp(source) => self.execute_cp(source),
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
-            Instruction::Xor(value) => self.execute_xor(value),
             Instruction::Rra => self.execute_rotate_right_a(),
             Instruction::Ret(cond) => self.execute_ret(cond),
             Instruction::Extended => {
@@ -406,11 +405,6 @@ impl Core {
             },
             Value::U16(value) => self.store_operand_u16(target, value - 1),
         }
-    }
-
-    pub fn execute_xor(&mut self, value: Operand) {
-        // TODO
-        self.load_operand(value);
     }
 
     pub fn push_u16(&mut self, value: u16) {
