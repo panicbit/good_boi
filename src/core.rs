@@ -179,6 +179,7 @@ impl Core {
             Instruction::Dec(target) => self.execute_dec(target),
             Instruction::Xor(value) => self.execute_xor(value),
             Instruction::Rra => self.execute_rotate_right_a(),
+            Instruction::Ret(cond) => self.execute_ret(cond),
             Instruction::Extended => {
                 let code = self.read_mem_u8(self.ip);
                 let instruction = ExtendedInstruction::decode(code);
@@ -189,6 +190,15 @@ impl Core {
                 self.print_state();
                 unimplemented!("execute: {:?}", instruction)
             },
+        }
+    }
+
+    fn execute_ret(&mut self, cond: Cond) {
+        let cond = self.evaluate_cond(cond);
+
+        if cond {
+            let addr = self.pop_u16();
+            self.ip = addr;
         }
     }
 
