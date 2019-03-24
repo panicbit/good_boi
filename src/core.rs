@@ -1,7 +1,7 @@
 use crate::instruction::{Instruction, ExtendedInstruction, Cond, Operand, Reg8, Reg16};
 
 pub struct Core {
-    ip: u16,
+    pc: u16,
     sp: u16,
     reg_a: u8,
     reg_b: u8,
@@ -22,7 +22,7 @@ impl Core {
         ram[..rom.len()].copy_from_slice(&rom);
 
         Self {
-            ip: 0x100,
+            pc: 0x100,
             sp: 0xFFFE,
             reg_a: 0,
             reg_b: 0,
@@ -38,12 +38,12 @@ impl Core {
     }
 
     pub fn current_instruction(&self) -> Instruction {
-        let code = self.peek_mem_u8(self.ip);
+        let code = self.peek_mem_u8(self.pc);
         Instruction::decode(code)
     }
 
     pub fn current_extended_instruction(&self) -> ExtendedInstruction {
-        let code = self.peek_mem_u8(self.ip + 1);
+        let code = self.peek_mem_u8(self.pc + 1);
         ExtendedInstruction::decode(code)
     }
 
@@ -147,8 +147,8 @@ impl Core {
         println!("de= {de:04X}", de = self.reg_de());
         println!("hl= {hl:04X}", hl = self.reg_hl());
         println!("sp= {sp:04X}", sp = self.sp);
-        println!("pc= {sp:04X}", sp = self.ip);
-        println!("nn= {nn:04X}", nn = self.peek_mem_u16(self.ip+1));
+        println!("pc= {sp:04X}", sp = self.pc);
+        println!("nn= {nn:04X}", nn = self.peek_mem_u16(self.pc+1));
         println!("ZNHC");
         println!("{:04b}", self.reg_f >> 4);
 
@@ -162,7 +162,7 @@ impl Core {
     }
 
     pub fn execute(&mut self, instruction: Instruction) {
-        self.ip += 1;
+        self.pc += 1;
 
         match instruction {
             Instruction::Nop => {},
@@ -181,12 +181,12 @@ impl Core {
             Instruction::Rra => self.execute_rotate_right_a(),
             Instruction::Ret(cond) => self.execute_ret(cond),
             Instruction::Extended => {
-                let code = self.read_mem_u8(self.ip);
+                let code = self.read_mem_u8(self.pc);
                 let instruction = ExtendedInstruction::decode(code);
                 self.execute_extended(instruction);
             }
             _ => {
-                self.ip -= 1;
+                self.pc -= 1;
                 self.print_state();
                 unimplemented!("execute: {:?}", instruction)
             },
@@ -198,7 +198,7 @@ impl Core {
 
         if cond {
             let addr = self.pop_u16();
-            self.ip = addr;
+            self.pc = addr;
         }
     }
 
@@ -216,13 +216,13 @@ impl Core {
     }
 
     fn execute_extended(&mut self, instruction: ExtendedInstruction) {
-        self.ip += 1;
+        self.pc += 1;
 
         match instruction {
             ExtendedInstruction::Srl(target) => self.execute_shift_right_logical(target),
             ExtendedInstruction::Rr(target) => self.execute_rotate_right(target),
             _ => {
-                self.ip -= 2;
+                self.pc -= 2;
                 self.print_state();
                 unimplemented!("execute_extended: {:?}", instruction)
             },
@@ -297,9 +297,9 @@ impl Core {
 
         if cond {
             if offset.is_positive() {
-                self.ip += offset as u16;
+                self.pc += offset as u16;
             } else {
-                self.ip -= offset.abs() as u16;
+                self.pc -= offset.abs() as u16;
             }
         }
     }
@@ -309,7 +309,7 @@ impl Core {
         let addr = self.load_u16_operand(addr);
 
         if cond {
-            self.ip = addr;
+            self.pc = addr;
         }
     }
 
@@ -318,8 +318,8 @@ impl Core {
         let addr = self.load_u16_operand(addr);
 
         if cond {
-            self.push_u16(self.ip);
-            self.ip = addr;
+            self.push_u16(self.pc);
+            self.pc = addr;
         }
     }
 
@@ -512,17 +512,17 @@ impl Core {
     }
 
     pub fn decode_imm8(&mut self) -> u8 {
-        let value = self.read_mem_u8(self.ip);
+        let value = self.read_mem_u8(self.pc);
 
-        self.ip += 1;
+        self.pc += 1;
 
         value
     }
 
     pub fn decode_imm16(&mut self) -> u16 {
-        let value = self.read_mem_u16(self.ip);
+        let value = self.read_mem_u16(self.pc);
 
-        self.ip += 2;
+        self.pc += 2;
 
         value
     }
