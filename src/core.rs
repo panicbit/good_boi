@@ -419,6 +419,12 @@ impl Core {
         match operand {
             Operand::Imm8 => self.decode_imm8(),
             Operand::Reg8(Reg8::A) => self.reg_a,
+            Operand::Reg8(Reg8::B) => self.reg_b,
+            Operand::Reg8(Reg8::C) => self.reg_c,
+            Operand::Reg8(Reg8::D) => self.reg_d,
+            Operand::Reg8(Reg8::E) => self.reg_e,
+            Operand::Reg8(Reg8::H) => self.reg_h,
+            Operand::Reg8(Reg8::L) => self.reg_l,
             _ => unimplemented!("load_u8_operand: {:?}", operand),
         }
     }
