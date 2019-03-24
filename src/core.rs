@@ -37,6 +37,10 @@ impl Core {
         }
     }
 
+    pub fn pc(&self) -> u16 {
+        self.pc
+    }
+
     pub fn current_instruction(&self) -> Instruction {
         let code = self.peek_mem_u8(self.pc);
         Instruction::decode(code)

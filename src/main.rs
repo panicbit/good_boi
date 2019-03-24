@@ -23,7 +23,8 @@ fn main() {
 
         let result = match &*input {
             ["p", addr] => print_mem_u8(&core, addr),
-            ["run"] => loop { core.step() },
+            ["r"] => loop { core.step() },
+            ["r", addr] => run_until(&mut core, addr),
             [] | ["n"] => {
                 core.step();
                 core.print_state();
@@ -36,6 +37,21 @@ fn main() {
             println!("❌ {}", err);
         }
     }
+}
+
+fn run_until(core: &mut Core, addr: &str) -> Result<(), Box<Error>> {
+    let addr = u16::from_str_radix(addr, 16)?;
+
+    loop {
+        core.step();
+
+        if addr == core.pc() {
+            break;
+        }
+    }
+
+    core.print_state();
+    Ok(())
 }
 
 fn print_mem_u8(core: &Core, addr: &str) -> Result<(), Box<Error>> {
