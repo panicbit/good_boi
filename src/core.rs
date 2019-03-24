@@ -445,13 +445,7 @@ impl Core {
         match source {
             Operand::Imm8 => Value::U8(self.decode_imm8()),
             Operand::Imm16 => Value::U16(self.decode_imm16()),
-            Operand::Reg8(Reg8::A) => Value::U8(self.reg_a),
-            Operand::Reg8(Reg8::B) => Value::U8(self.reg_b),
-            Operand::Reg8(Reg8::C) => Value::U8(self.reg_c),
-            Operand::Reg8(Reg8::D) => Value::U8(self.reg_d),
-            Operand::Reg8(Reg8::E) => Value::U8(self.reg_e),
-            Operand::Reg8(Reg8::H) => Value::U8(self.reg_h),
-            Operand::Reg8(Reg8::L) => Value::U8(self.reg_l),
+            Operand::Reg8(reg8) => Value::U8(self.load_u8_register(reg8)),
             Operand::Reg16(reg16) => Value::U16(self.load_u16_register(reg16)),
             Operand::RegRef16(Reg16::HL) => Value::U8(self.read_mem_u8(self.reg_hl())),
             Operand::RegRef16(Reg16::HLInc) => {
@@ -459,6 +453,18 @@ impl Core {
                 Value::U8(self.read_mem_u8(addr))
             },
             _ => unimplemented!("load_operand: {:?}", source),
+        }
+    }
+
+    fn load_u8_register(&mut self, reg8: Reg8) -> u8 {
+        match reg8 {
+            Reg8::A => self.reg_a,
+            Reg8::B => self.reg_b,
+            Reg8::C => self.reg_c,
+            Reg8::D => self.reg_d,
+            Reg8::E => self.reg_e,
+            Reg8::H => self.reg_h,
+            Reg8::L => self.reg_l,
         }
     }
 
