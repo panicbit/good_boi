@@ -406,12 +406,21 @@ impl Core {
             Value::U8(value) => {
                 let half_carry = value & 0xF == 0xF;
                 let value = value.wrapping_add(1);
+
                 self.set_flag_z(value == 0);
                 self.set_flag_n(false);
                 self.set_flag_h(half_carry);
                 self.store_operand_u8(target, value)
             },
-            Value::U16(value) => self.store_operand_u16(target, value + 1),
+            Value::U16(value) => {
+                let half_carry = value & 0xFF == 0xFF;
+                let value = value.wrapping_add(1);
+
+                self.set_flag_z(value == 0);
+                self.set_flag_n(false);
+                self.set_flag_h(half_carry);
+                self.store_operand_u16(target, value)
+            },
         }
     }
 
