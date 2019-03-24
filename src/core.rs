@@ -479,7 +479,7 @@ impl Core {
             },
             Operand::Imm16Ref => {
                 let addr = self.decode_imm16();
-                Value::U16(self.read_mem_u16(addr))
+                Value::U8(self.read_mem_u8(addr))
             },
             _ => unimplemented!("load_operand: {:?}", source),
         }
