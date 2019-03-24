@@ -356,13 +356,22 @@ impl Core {
 
     pub fn execute_ldh(&mut self, target: Operand, source: Operand) {
         match (target, source) {
-            (Operand::Imm8Ref, _) => {
+            (Operand::Reg8(Reg8::A), Operand::Imm8Ref) => {
                 let ptr = self.decode_imm8() as u16 + 0xFF00;
+                let value = self.read_mem_u8(ptr);
+                self.reg_a = value;
+            }
+            (Operand::Imm8Ref, Operand::Reg8(Reg8::A)) => {
                 let value = self.load_u8_operand(source);
+                let ptr = self.decode_imm8() as u16 + 0xFF00;
 
                 self.write_mem_u8(ptr, value);
             },
-            _ => unimplemented!("execute_ldh: {:?} <- {:?}", target, source),
+            _ => {
+                self.pc -= 1;
+                self.print_state();
+                unimplemented!("execute_ldh: {:?} <- {:?}", target, source)
+            },
         }
     }
 
