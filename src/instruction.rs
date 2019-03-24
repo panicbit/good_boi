@@ -597,6 +597,49 @@ impl Instruction {
     pub fn decode(code: u8) -> Self {
         decode(code)
     }
+
+    pub fn len(&self) -> u16 {
+        match self {
+            Instruction::Nop => 1,
+            Instruction::Ld(operand1, operand2) => operand1.len() + operand2.len(),
+            Instruction::Inc(operand) => operand.len(),
+            Instruction::Dec(operand) => operand.len(),
+            Instruction::Add(operand1, operand2) => operand1.len() + operand2.len(),
+            Instruction::Adc(operand1, operand2) => operand1.len() + operand2.len(),
+            Instruction::Sub(operand) => operand.len(),
+            Instruction::Sbc(operand1, operand2) => operand1.len() + operand2.len(),
+            Instruction::Mul(operand1, operand2) => operand1.len() + operand2.len(),
+            Instruction::Div(operand1, operand2) => operand1.len() + operand2.len(),
+            Instruction::And(operand) => operand.len(),
+            Instruction::Xor(operand) => operand.len(),
+            Instruction::Or(operand) => operand.len(),
+            Instruction::Cp(operand) => operand.len(),
+            Instruction::Jr(_cond, operand) => operand.len(),
+            Instruction::Jp(_cond, operand) => operand.len(),
+            Instruction::Call(_cond, operand) => operand.len(),
+            Instruction::Ret(_cond) => 1,
+            Instruction::Reti => 1,
+            Instruction::Pop(_reg) => 1,
+            Instruction::Push(_reg) => 1,
+            Instruction::Stop => 1,
+            Instruction::Halt => 1,
+            Instruction::Rlca => 1,
+            Instruction::Rrca => 1,
+            Instruction::Rla => 1,
+            Instruction::Rra => 1,
+            Instruction::Daa => 1,
+            Instruction::Cpl => 1,
+            Instruction::Scf => 1,
+            Instruction::Ccf => 1,
+            Instruction::Rst(_addr) => 1,
+            Instruction::Extended => 1,
+            Instruction::Invalid => 1,
+            Instruction::Ldh(operand1, operand2) => operand1.len() + operand2.len(),
+            Instruction::Di => 1,
+            Instruction::Ei => 1,
+            Instruction::Ldhl => 1,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -631,6 +674,22 @@ pub enum Operand {
     Imm16,
     Imm16Ref,
     Cond(Cond),
+}
+
+impl Operand {
+    pub fn len(&self) -> u16 {
+        match self {
+            Operand::Reg8(Reg8) => 0,
+            Operand::RegRef8(Reg8) => 0,
+            Operand::Reg16(Reg16) => 0,
+            Operand::RegRef16(Reg16) => 0,
+            Operand::Imm8 => 1,
+            Operand::Imm8Ref => 1,
+            Operand::Imm16 => 1,
+            Operand::Imm16Ref => 1,
+            Operand::Cond(Cond) => 0,
+        }
+    }
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
