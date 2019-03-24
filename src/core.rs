@@ -173,6 +173,7 @@ impl Core {
             Instruction::Ld(target, source) => self.execute_ld(target, source),
             Instruction::Ldh(target, source) => self.execute_ldh(target, source),
             Instruction::Push(source) => self.execute_push(source),
+            Instruction::Pop(target) => self.execute_pop(target),
             Instruction::Cp(source) => self.execute_cp(source),
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
@@ -341,6 +342,17 @@ impl Core {
             Reg16::DE => self.push_u16(self.reg_de()),
             Reg16::HL => self.push_u16(self.reg_hl()),
             _ => unimplemented!("execute_push: {:?}", source),
+    }
+
+    pub fn execute_pop(&mut self, target: Reg16) {
+        let value = self.pop_u16();
+
+        match target {
+            Reg16::AF => self.set_reg_af(value),
+            Reg16::BC => self.set_reg_bc(value),
+            Reg16::DE => self.set_reg_de(value),
+            Reg16::HL => self.set_reg_hl(value),
+            _ => unimplemented!("execute_pop: {:?}", target),
         }
     }
 
@@ -382,6 +394,16 @@ impl Core {
         self.sp -= 2;
         self.write_mem_u8(self.sp, lo);
         self.write_mem_u8(self.sp + 1, hi);
+    }
+
+    pub fn pop_u16(&mut self) -> u16 {
+        let lo = self.read_mem_u8(self.sp) as u16;
+        let hi = self.read_mem_u8(self.sp + 1) as u16;
+        let value = hi << 8 | lo;
+
+        self.sp += 2;
+
+        value
     }
 
     pub fn evaluate_cond(&self, cond: Cond) -> bool {
