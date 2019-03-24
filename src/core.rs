@@ -136,6 +136,11 @@ impl Core {
         }
     }
 
+    pub fn increment_reg_hl(&mut self) {
+        let value = self.reg_hl().wrapping_add(1);
+        self.set_reg_hl(value);
+    }
+
     pub fn print_state(&self) {
         println!("af= {af:04X}", af = self.reg_af());
         println!("bc= {bc:04X}", bc = self.reg_bc());
@@ -403,7 +408,7 @@ impl Core {
             Operand::RegRef16(Reg16::HL) => Value::U8(self.read_mem_u8(self.reg_hl())),
             Operand::RegRef16(Reg16::HLInc) => {
                 let addr = self.reg_hl();
-                self.set_reg_hl(addr + 1);
+                self.increment_reg_hl();
                 Value::U8(self.read_mem_u8(addr))
             },
             _ => unimplemented!("load_operand: {:?}", source),
@@ -430,7 +435,12 @@ impl Core {
             Operand::Imm16Ref => {
                 let ptr = self.decode_imm16();
                 self.write_mem_u8(ptr, value);
-            }
+            },
+            Operand::RegRef16(Reg16::HLInc) => {
+                let ptr = self.reg_hl();
+                self.increment_reg_hl();
+                self.write_mem_u8(ptr, value);
+            },
             _ => unimplemented!("store_operand_u8: {:?} <- {:?}", target, value)
         }
     }
