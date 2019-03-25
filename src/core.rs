@@ -483,9 +483,8 @@ impl Core {
             Operand::Imm16 => Value::U16(self.decode_imm16()),
             Operand::Reg8(reg8) => Value::U8(self.load_u8_register(reg8)),
             Operand::Reg16(reg16) => Value::U16(self.load_u16_register(reg16)),
-            Operand::RegRef16(Reg16::HL) => Value::U8(self.read_mem_u8(self.reg_hl())),
-            Operand::RegRef16(Reg16::HLInc) => {
-                let addr = self.reg_hl_postincrement();
+            Operand::RegRef16(reg16) => {
+                let addr = self.load_u16_register(reg16);
                 Value::U8(self.read_mem_u8(addr))
             },
             Operand::Imm16Ref => {
