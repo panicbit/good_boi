@@ -187,6 +187,7 @@ impl Core {
             Instruction::Pop(target) => self.execute_pop(target),
             Instruction::Cp(source) => self.execute_cp(source),
             Instruction::Add(target, value) => self.execute_add(target, value),
+            Instruction::Sub(value) => self.execute_sub(value),
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
             Instruction::Or(value) => self.execute_or(value),
@@ -238,6 +239,20 @@ impl Core {
                 unimplemented!("execute_add: {:?} + {:?}", target, value);
             }
         }
+    }
+
+    fn execute_sub(&mut self, value: Operand) {
+        let a = self.reg_a;
+        let b = self.load_u8_operand(value);
+        let (value, carry) = a.overflowing_sub(b);
+        let (_, half_carry) = (a << 4).overflowing_sub(b << 4);
+
+        self.set_flag_z(value == 0);
+        self.set_flag_n(false);
+        self.set_flag_h(half_carry);
+        self.set_flag_c(carry);
+
+        self.reg_a = value;
     }
 
     fn execute_or(&mut self, value: Operand) {
