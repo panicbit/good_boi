@@ -186,6 +186,7 @@ impl Core {
             Instruction::Push(source) => self.execute_push(source),
             Instruction::Pop(target) => self.execute_pop(target),
             Instruction::Cp(source) => self.execute_cp(source),
+            Instruction::Add(target, value) => self.execute_add(target, value),
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
             Instruction::Or(value) => self.execute_or(value),
@@ -203,6 +204,39 @@ impl Core {
                 self.print_state();
                 unimplemented!("execute: {:?}", instruction)
             },
+        }
+    }
+
+    fn execute_add(&mut self, target: Operand, value: Operand) {
+        let a = self.load_operand(target);
+        let b = self.load_operand(value);
+
+        match (a, b) {
+            (Value::U8(a), Value::U8(b)) => {
+                let (value, carry) = a.overflowing_add(b);
+                let (_, half_carry) = (a << 4).overflowing_add(b << 4);
+
+                self.set_flag_z(value == 0);
+                self.set_flag_n(false);
+                self.set_flag_h(half_carry);
+                self.set_flag_c(carry);
+
+                self.store_operand_u8(target, value);
+            },
+            (Value::U16(a), Value::U16(b)) => {
+                let (value, carry) = a.overflowing_add(b);
+                let (_, half_carry) = (a << 8).overflowing_add(b << 8);
+
+                self.set_flag_z(value == 0);
+                self.set_flag_n(false);
+                self.set_flag_h(half_carry);
+                self.set_flag_c(carry);
+
+                self.store_operand_u16(target, value);
+            },
+            _ => {
+                unimplemented!("execute_add: {:?} + {:?}", target, value);
+            }
         }
     }
 
