@@ -216,7 +216,7 @@ pub fn decode(code: u8) -> Instruction {
         0xBF => Cp(Reg8(A)),
 
         0xC0 => Ret(ZReset),
-        0xC1 => Pop(DE),
+        0xC1 => Pop(BC),
         0xC2 => Jp(ZReset, Imm16),
         0xC3 => Jp(Always, Imm16),
         0xC4 => Call(ZReset, Imm16),
