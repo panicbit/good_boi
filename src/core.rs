@@ -346,7 +346,7 @@ impl Core {
         self.store_operand_u8(target, value);
     }
 
-    fn write_mem_u8(&mut self, addr: u16, value: u8) {
+    pub fn write_mem_u8(&mut self, addr: u16, value: u8) {
         println!("${:04X} = {:02X}", addr, value);
 
         if addr == 0xFF01 && value == 0x81 {

@@ -30,6 +30,7 @@ fn main() {
                 core.print_state();
                 Ok(())
             },
+            ["w", addr, value] => write_mem_u8(&mut core, addr, value),
             _ => Err("Unknown command".into()),
         };
 
@@ -57,6 +58,18 @@ fn run_until(core: &mut Core, addr: &str) -> Result<(), Box<Error>> {
 fn print_mem_u8(core: &Core, addr: &str) -> Result<(), Box<Error>> {
     let addr = u16::from_str_radix(addr, 16)?;
     let value = core.peek_mem_u8(addr);
+
+    println!("[{:04X}] = {:02X}", addr, value);
+
+    Ok(())
+}
+
+fn write_mem_u8(core: &mut Core, addr: &str, value: &str) -> Result<(), Box<Error>> {
+    let addr = u16::from_str_radix(addr, 16)?;
+    let value = u8::from_str_radix(value, 16)?;
+    core.write_mem_u8(addr, value);
+
+    dbg!(addr);
 
     println!("[{:04X}] = {:02X}", addr, value);
 
