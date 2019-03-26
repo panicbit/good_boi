@@ -627,6 +627,10 @@ impl Core {
             Operand::Reg8(Reg8::E) => self.reg_e,
             Operand::Reg8(Reg8::H) => self.reg_h,
             Operand::Reg8(Reg8::L) => self.reg_l,
+            Operand::RegRef16(reg16) => {
+                let addr = self.load_u16_register(reg16);
+                self.read_mem_u8(addr)
+            },
             _ => unimplemented!("load_u8_operand: {:?}", operand),
         }
     }
