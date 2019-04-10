@@ -1,5 +1,6 @@
 use std::io::Write;
 use std::error::Error;
+use std::collections::HashSet;
 pub use crate::core::Core;
 
 mod instruction;
@@ -13,6 +14,8 @@ fn main() {
 
     core.print_state();
 
+    let mut breakpoints = HashSet::<u16>::new();
+
     loop {
         let mut input = String::new();
 
@@ -22,8 +25,16 @@ fn main() {
         let input = input.split_whitespace().collect::<Vec<&str>>();
 
         let result = match &*input {
+            ["b", addr] => add_breakpoint(&mut breakpoints, addr),
             ["p", addr] => print_mem_u8(&core, addr),
-            ["r"] => loop { core.step() },
+            ["r"] => loop {
+                core.step();
+                core.print_state();
+                if breakpoints.contains(&core.pc()) {
+                    println!("Stopping at breakpoint.");
+                    break Ok(());
+                }
+            },
             ["r", addr] => run_until(&mut core, addr),
             [] | ["n"] => {
                 core.step();
@@ -38,6 +49,14 @@ fn main() {
             println!("❌ {}", err);
         }
     }
+}
+
+fn add_breakpoint(breakpoints: &mut HashSet<u16>, addr: &str) -> Result<(), Box<Error>> {
+    let addr = u16::from_str_radix(addr, 16)?;
+
+    breakpoints.insert(addr);
+
+    Ok(())
 }
 
 fn run_until(core: &mut Core, addr: &str) -> Result<(), Box<Error>> {
