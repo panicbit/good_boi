@@ -1,5 +1,7 @@
 use crate::instruction::{Instruction, ExtendedInstruction, Cond, Operand, Reg8, Reg16};
-use crate::mapper::{Mapper, TOTAL_RAM_SIZE};
+use crate::mapper::Mapper;
+use crate::constants::TOTAL_RAM_SIZE;
+use crate::io::Bus;
 
 pub struct Core {
     pc: u16,
@@ -16,6 +18,7 @@ pub struct Core {
     ram: Vec<u8>,
     interrupts_enabled: bool,
     mapper: Mapper,
+    bus: Bus,
 }
 
 impl Core {
@@ -35,6 +38,7 @@ impl Core {
             ram: vec![0; TOTAL_RAM_SIZE as usize],
             interrupts_enabled: true,
             mapper: Mapper::Rom,
+            bus: Bus::new(),
         }
     }
 
@@ -354,7 +358,7 @@ impl Core {
             println!("### {}", self.ram[0xFF01] as char);
         }
 
-        self.mapper.write_u8(&mut self.ram, addr, value);
+        self.mapper.write_u8(&self.bus, &mut self.ram, addr, value);
     }
 
     pub fn write_mem_u16(&mut self, addr: u16, value: u16) {
@@ -368,11 +372,11 @@ impl Core {
     }
 
     pub fn peek_mem_u8(&self, addr: u16) -> u8 {
-        self.mapper.peek_u8(&self.rom, &self.ram, addr)
+        self.mapper.peek_u8(&self.bus, &self.rom, &self.ram, addr)
     }
 
     fn read_mem_u8(&mut self, addr: u16) -> u8 {
-        self.mapper.read_u8(&self.rom, &self.ram, addr)
+        self.mapper.read_u8(&self.bus, &self.rom, &self.ram, addr)
     }
 
     pub fn peek_mem_u16(&self, addr: u16) -> u16 {

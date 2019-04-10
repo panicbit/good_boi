@@ -1,11 +1,9 @@
+extern crate good_boi;
+
 use std::io::Write;
 use std::error::Error;
 use std::collections::HashSet;
-pub use crate::core::Core;
-
-mod instruction;
-mod core;
-mod mapper;
+use good_boi::Core;
 
 fn main() {
     // let data = include_bytes!("../gb-test-roms/cpu_instrs/cpu_instrs.gb");
