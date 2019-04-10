@@ -1,4 +1,5 @@
 use crate::instruction::{Instruction, ExtendedInstruction, Cond, Operand, Reg8, Reg16};
+use crate::mapper::Mapper;
 
 pub struct Core {
     pc: u16,
@@ -11,16 +12,14 @@ pub struct Core {
     reg_f: u8,
     reg_h: u8,
     reg_l: u8,
+    rom: Vec<u8>,
     ram: Vec<u8>,
     interrupts_enabled: bool,
+    mapper: Mapper,
 }
 
 impl Core {
     pub fn new(rom: Vec<u8>) -> Self {
-        let mut ram = vec![0; 0x10000];
-
-        ram[..rom.len()].copy_from_slice(&rom);
-
         Self {
             pc: 0x100,
             sp: 0xFFFE,
@@ -32,8 +31,10 @@ impl Core {
             reg_h: 0x00,
             reg_l: 0x0D,
             reg_f: 0x80,
-            ram,
+            rom,
+            ram: vec![0; 8 * 1024 + 0x100],
             interrupts_enabled: true,
+            mapper: Mapper::Rom,
         }
     }
 
@@ -353,7 +354,7 @@ impl Core {
             println!("### {}", self.ram[0xFF01] as char);
         }
 
-        self.ram[addr as usize] = value;
+        self.mapper.write_u8(&mut self.ram, addr, value);
     }
 
     pub fn write_mem_u16(&mut self, addr: u16, value: u16) {
@@ -367,11 +368,11 @@ impl Core {
     }
 
     pub fn peek_mem_u8(&self, addr: u16) -> u8 {
-        self.ram[addr as usize]
+        self.mapper.peek_u8(&self.rom, &self.ram, addr)
     }
 
     fn read_mem_u8(&mut self, addr: u16) -> u8 {
-        self.ram[addr as usize]
+        self.mapper.read_u8(&self.rom, &self.ram, addr)
     }
 
     pub fn peek_mem_u16(&self, addr: u16) -> u16 {

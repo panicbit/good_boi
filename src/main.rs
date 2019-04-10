@@ -5,6 +5,7 @@ pub use crate::core::Core;
 
 mod instruction;
 mod core;
+mod mapper;
 
 fn main() {
     // let data = include_bytes!("../gb-test-roms/cpu_instrs/cpu_instrs.gb");
