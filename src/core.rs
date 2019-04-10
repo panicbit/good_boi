@@ -1,5 +1,5 @@
 use crate::instruction::{Instruction, ExtendedInstruction, Cond, Operand, Reg8, Reg16};
-use crate::mapper::Mapper;
+use crate::mapper::{Mapper, TOTAL_RAM_SIZE};
 
 pub struct Core {
     pc: u16,
@@ -32,7 +32,7 @@ impl Core {
             reg_l: 0x0D,
             reg_f: 0x80,
             rom,
-            ram: vec![0; 8 * 1024 + 0x100],
+            ram: vec![0; TOTAL_RAM_SIZE as usize],
             interrupts_enabled: true,
             mapper: Mapper::Rom,
         }
