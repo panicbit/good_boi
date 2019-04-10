@@ -1,6 +1,6 @@
 use std::sync::{Mutex, Arc};
 use crate::constants::{
-    VRAM_START, VRAM_END,
+    VRAM_START, VRAM_END, VRAM_SIZE,
     IO_REG_LY,
 };
 
@@ -43,7 +43,7 @@ struct DummyVideo {
 impl DummyVideo {
     pub fn new() -> Self {
         Self {
-            ram: vec![0; 0x2000],
+            ram: vec![0; VRAM_SIZE as usize],
         }
     }
 }
@@ -52,7 +52,10 @@ impl Device for Mutex<DummyVideo> {
     fn peek_u8(&self, addr: u16) -> u8 {
         let this = self.lock().unwrap();
         match addr {
-            VRAM_START ..= VRAM_END => this.ram[addr as usize],
+            VRAM_START ..= VRAM_END => {
+                let addr = addr - VRAM_START;
+                this.ram[addr as usize]
+            },
             IO_REG_LY => {
                 println!("TODO: IO_REG_LY peek");
                 0x99
@@ -67,7 +70,10 @@ impl Device for Mutex<DummyVideo> {
     fn read_u8(&self, addr: u16) -> u8 {
         let this = self.lock().unwrap();
         match addr {
-            VRAM_START ..= VRAM_END => this.ram[addr as usize],
+            VRAM_START ..= VRAM_END => {
+                let addr = addr - VRAM_START;
+                this.ram[addr as usize]
+            },
             IO_REG_LY => {
                 println!("TODO: IO_REG_LY read");
                 0x94
@@ -82,7 +88,10 @@ impl Device for Mutex<DummyVideo> {
     fn write_u8(&self, addr: u16, value: u8) {
         let mut this = self.lock().unwrap();
         match addr {
-            VRAM_START ..= VRAM_END => this.ram[addr as usize] = value,
+            VRAM_START ..= VRAM_END => {
+                let addr = addr - VRAM_START;
+                this.ram[addr as usize] = value;
+            },
             IO_REG_LY => println!("Invalid write to IO_REG_LY"),
             _ => {
                 println!("TODO: video write @ {:04X}", addr);

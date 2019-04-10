@@ -13,6 +13,7 @@ pub mod constants {
     pub const ROM_END: u16 = 0x7FFF;
     pub const VRAM_START: u16 = 0x8000;
     pub const VRAM_END: u16 = 0x9FFF;
+    pub const VRAM_SIZE: u16 = 0x2000;
     pub const LO_RAM_START: u16 = 0xC000;
     pub const LO_RAM_END: u16 = 0xDFFF;
     pub const IO_START: u16 = 0xFF00;
