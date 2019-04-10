@@ -49,6 +49,8 @@ impl Debugger {
                 ["pp", addr] => self.print_mem_u16(addr),
                 ["r"] => self.run_forever(),
                 ["r", addr] => self.run_until(addr),
+                ["rp"] => self.run_past(&self.core.pc().to_string()),
+                ["rp", addr] => self.run_past(addr),
                 ["w", addr, value] => self.write_mem_u8(addr, value),
                 ["ww", addr, value] => self.write_mem_u16(addr, value),
                 [] | ["n"] => self.single_step(),
@@ -59,6 +61,18 @@ impl Debugger {
                 println!("❌ {}", err);
             }
         }
+    }
+
+    fn run_past(&mut self, addr: &str) -> Result<(), Box<Error>> {
+        let addr = u16::from_str_radix(addr, 16)?;
+
+        while self.core.pc() <= addr {
+            self.core.step();
+        }
+
+        self.core.print_state();
+
+        Ok(())
     }
 
     fn single_step(&mut self) -> Result<(), Box<Error>> {
