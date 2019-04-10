@@ -46,26 +46,33 @@ impl Debugger {
             let result = match &*input {
                 ["b", addr] => self.add_breakpoint(addr),
                 ["p", addr] => self.print_mem_u8(addr),
-                ["r"] => loop {
-                    self.core.step();
-                    self.core.print_state();
-                    if self.breakpoints.contains(&self.core.pc()) {
-                        println!("Stopping at breakpoint.");
-                        break Ok(());
-                    }
-                },
+                ["r"] => self.run_forever(),
                 ["r", addr] => self.run_until(addr),
-                [] | ["n"] => {
-                    self.core.step();
-                    self.core.print_state();
-                    Ok(())
-                },
+                [] | ["n"] => self.single_step(),
                 ["w", addr, value] => self.write_mem_u8(addr, value),
                 _ => Err("Unknown command".into()),
             };
 
             if let Err(err) = result {
                 println!("❌ {}", err);
+            }
+        }
+    }
+
+    fn single_step(&mut self) -> Result<(), Box<Error>> {
+        self.core.step();
+        self.core.print_state();
+        Ok(())
+    }
+
+    fn run_forever(&mut self) -> Result<(), Box<Error>> {
+        loop {
+            self.core.step();
+            self.core.print_state();
+
+            if self.breakpoints.contains(&self.core.pc()) {
+                println!("Stopping at breakpoint.");
+                break Ok(());
             }
         }
     }
