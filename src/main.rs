@@ -49,8 +49,9 @@ impl Debugger {
                 ["pp", addr] => self.print_mem_u16(addr),
                 ["r"] => self.run_forever(),
                 ["r", addr] => self.run_until(addr),
-                [] | ["n"] => self.single_step(),
                 ["w", addr, value] => self.write_mem_u8(addr, value),
+                ["ww", addr, value] => self.write_mem_u16(addr, value),
+                [] | ["n"] => self.single_step(),
                 _ => Err("Unknown command".into()),
             };
 
@@ -124,6 +125,19 @@ impl Debugger {
         let value = u8::from_str_radix(value, 16)?;
 
         self.core.write_mem_u8(addr, value);
+
+        dbg!(addr);
+
+        println!("[{:04X}] = {:02X}", addr, value);
+
+        Ok(())
+    }
+
+    fn write_mem_u16(&mut self, addr: &str, value: &str) -> Result<(), Box<Error>> {
+        let addr = u16::from_str_radix(addr, 16)?;
+        let value = u16::from_str_radix(value, 16)?;
+
+        self.core.write_mem_u16(addr, value);
 
         dbg!(addr);
 
