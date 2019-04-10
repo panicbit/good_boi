@@ -356,6 +356,16 @@ impl Core {
         self.ram[addr as usize] = value;
     }
 
+    pub fn write_mem_u16(&mut self, addr: u16, value: u16) {
+        println!("${:04X} = {:04X}", addr, value);
+
+        let lo = value as u8;
+        let hi = (value >> 8) as u8;
+
+        self.write_mem_u8(addr    , lo);
+        self.write_mem_u8(addr + 1, hi);
+    }
+
     pub fn peek_mem_u8(&self, addr: u16) -> u8 {
         self.ram[addr as usize]
     }
