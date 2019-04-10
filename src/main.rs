@@ -46,6 +46,7 @@ impl Debugger {
             let result = match &*input {
                 ["b", addr] => self.add_breakpoint(addr),
                 ["p", addr] => self.print_mem_u8(addr),
+                ["pp", addr] => self.print_mem_u16(addr),
                 ["r"] => self.run_forever(),
                 ["r", addr] => self.run_until(addr),
                 [] | ["n"] => self.single_step(),
@@ -105,6 +106,15 @@ impl Debugger {
         let value = self.core.peek_mem_u8(addr);
 
         println!("[{:04X}] = {:02X}", addr, value);
+
+        Ok(())
+    }
+
+    fn print_mem_u16(&mut self, addr: &str) -> Result<(), Box<Error>> {
+        let addr = u16::from_str_radix(addr, 16)?;
+        let value = self.core.peek_mem_u16(addr);
+
+        println!("[{:04X}] = {:04X}", addr, value);
 
         Ok(())
     }
