@@ -8,89 +8,110 @@ mod core;
 
 fn main() {
     // let data = include_bytes!("../gb-test-roms/cpu_instrs/cpu_instrs.gb");
-    let data = include_bytes!("../gb-test-roms/cpu_instrs/individual/01-special.gb");
+    //let data = include_bytes!("../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb");
+    let data = include_bytes!("/tmp/test.gb");
 
-    let mut core = Core::new(data.to_vec());
-
-    core.print_state();
-
-    let mut breakpoints = HashSet::<u16>::new();
-
-    loop {
-        let mut input = String::new();
-
-        print!("> ");
-        std::io::stdout().flush().unwrap();
-        std::io::stdin().read_line(&mut input).unwrap();
-        let input = input.split_whitespace().collect::<Vec<&str>>();
-
-        let result = match &*input {
-            ["b", addr] => add_breakpoint(&mut breakpoints, addr),
-            ["p", addr] => print_mem_u8(&core, addr),
-            ["r"] => loop {
-                core.step();
-                core.print_state();
-                if breakpoints.contains(&core.pc()) {
-                    println!("Stopping at breakpoint.");
-                    break Ok(());
-                }
-            },
-            ["r", addr] => run_until(&mut core, addr),
-            [] | ["n"] => {
-                core.step();
-                core.print_state();
-                Ok(())
-            },
-            ["w", addr, value] => write_mem_u8(&mut core, addr, value),
-            _ => Err("Unknown command".into()),
-        };
-
-        if let Err(err) = result {
-            println!("❌ {}", err);
-        }
-    }
+    Debugger::new(&data[..]).run();
 }
 
-fn add_breakpoint(breakpoints: &mut HashSet<u16>, addr: &str) -> Result<(), Box<Error>> {
-    let addr = u16::from_str_radix(addr, 16)?;
-
-    breakpoints.insert(addr);
-
-    Ok(())
+struct Debugger {
+    core: Core,
+    breakpoints: HashSet<u16>,
 }
 
-fn run_until(core: &mut Core, addr: &str) -> Result<(), Box<Error>> {
-    let addr = u16::from_str_radix(addr, 16)?;
-
-    loop {
-        core.step();
-
-        if addr == core.pc() {
-            break;
+impl Debugger {
+    fn new(rom: impl Into<Vec<u8>>) -> Self {
+        Self {
+            core: Core::new(rom.into()),
+            breakpoints: HashSet::new(),
         }
     }
 
-    core.print_state();
-    Ok(())
-}
+    fn run(&mut self) {
+        self.core.print_state();
 
-fn print_mem_u8(core: &Core, addr: &str) -> Result<(), Box<Error>> {
-    let addr = u16::from_str_radix(addr, 16)?;
-    let value = core.peek_mem_u8(addr);
+        // loop {
+        //     core.step();
+        //     // core.print_state();
+        // }
 
-    println!("[{:04X}] = {:02X}", addr, value);
+        loop {
+            let mut input = String::new();
 
-    Ok(())
-}
+            print!("> ");
+            std::io::stdout().flush().unwrap();
+            std::io::stdin().read_line(&mut input).unwrap();
+            let input = input.split_whitespace().collect::<Vec<&str>>();
 
-fn write_mem_u8(core: &mut Core, addr: &str, value: &str) -> Result<(), Box<Error>> {
-    let addr = u16::from_str_radix(addr, 16)?;
-    let value = u8::from_str_radix(value, 16)?;
-    core.write_mem_u8(addr, value);
+            let result = match &*input {
+                ["b", addr] => self.add_breakpoint(addr),
+                ["p", addr] => self.print_mem_u8(addr),
+                ["r"] => loop {
+                    self.core.step();
+                    self.core.print_state();
+                    if self.breakpoints.contains(&self.core.pc()) {
+                        println!("Stopping at breakpoint.");
+                        break Ok(());
+                    }
+                },
+                ["r", addr] => self.run_until(addr),
+                [] | ["n"] => {
+                    self.core.step();
+                    self.core.print_state();
+                    Ok(())
+                },
+                ["w", addr, value] => self.write_mem_u8(addr, value),
+                _ => Err("Unknown command".into()),
+            };
 
-    dbg!(addr);
+            if let Err(err) = result {
+                println!("❌ {}", err);
+            }
+        }
+    }
 
-    println!("[{:04X}] = {:02X}", addr, value);
+    fn add_breakpoint(&mut self, addr: &str) -> Result<(), Box<Error>> {
+        let addr = u16::from_str_radix(addr, 16)?;
 
-    Ok(())
+        self.breakpoints.insert(addr);
+
+        Ok(())
+    }
+
+    fn run_until(&mut self, addr: &str) -> Result<(), Box<Error>> {
+        let addr = u16::from_str_radix(addr, 16)?;
+
+        loop {
+            self.core.step();
+
+            if addr == self.core.pc() {
+                break;
+            }
+        }
+
+        self.core.print_state();
+        Ok(())
+    }
+
+    fn print_mem_u8(&mut self, addr: &str) -> Result<(), Box<Error>> {
+        let addr = u16::from_str_radix(addr, 16)?;
+        let value = self.core.peek_mem_u8(addr);
+
+        println!("[{:04X}] = {:02X}", addr, value);
+
+        Ok(())
+    }
+
+    fn write_mem_u8(&mut self, addr: &str, value: &str) -> Result<(), Box<Error>> {
+        let addr = u16::from_str_radix(addr, 16)?;
+        let value = u8::from_str_radix(value, 16)?;
+
+        self.core.write_mem_u8(addr, value);
+
+        dbg!(addr);
+
+        println!("[{:04X}] = {:02X}", addr, value);
+
+        Ok(())
+    }
 }
