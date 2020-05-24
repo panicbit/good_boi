@@ -686,6 +686,10 @@ impl Core {
     pub fn load_u16_operand(&mut self, operand: Operand) -> u16 {
         match operand {
             Operand::Imm16 => self.decode_imm16(),
+            Operand::RegRef16(reg16) => {
+                let addr = self.load_u16_register(reg16);
+                self.read_mem_u16(addr)
+            },
             _ => unimplemented!("load_u16_operand: {:?}", operand),
         }
     }
