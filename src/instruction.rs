@@ -679,15 +679,15 @@ pub enum Operand {
 impl Operand {
     pub fn len(&self) -> u16 {
         match self {
-            Operand::Reg8(Reg8) => 0,
-            Operand::RegRef8(Reg8) => 0,
-            Operand::Reg16(Reg16) => 0,
-            Operand::RegRef16(Reg16) => 0,
+            Operand::Reg8(_reg8) => 0,
+            Operand::RegRef8(_reg8) => 0,
+            Operand::Reg16(_reg16) => 0,
+            Operand::RegRef16(_reg16) => 0,
             Operand::Imm8 => 1,
             Operand::Imm8Ref => 1,
             Operand::Imm16 => 1,
             Operand::Imm16Ref => 1,
-            Operand::Cond(Cond) => 0,
+            Operand::Cond(_cond) => 0,
         }
     }
 }

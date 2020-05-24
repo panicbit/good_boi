@@ -14,7 +14,7 @@ impl Bus {
         Self {
             serial: Mutex::new(Serial::default()),
             cartridge: Mutex::new(cartridge),
-            low_ram: Mutex::new(Ram::new(LO_RAM_START, LO_RAM_SIZE)),
+            low_ram: Mutex::new(Ram::new(LO_RAM_SIZE)),
             unimplemented_warning: Mutex::new(UnimplementedWarning),
         }
     }
@@ -61,14 +61,12 @@ impl<T: Device> Device for Mutex<T> {
 }
 
 pub struct Ram {
-    base: u16,
     data: Vec<u8>,
 }
 
 impl Ram {
-    pub fn new(base: u16, size: usize) -> Self {
+    pub fn new(size: usize) -> Self {
         Self {
-            base,
             data: vec![0x11; size],
         }
     }

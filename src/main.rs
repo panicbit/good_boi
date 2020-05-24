@@ -67,7 +67,7 @@ impl Debugger {
         }
     }
 
-    fn run_past(&mut self, addr: &str) -> Result<(), Box<Error>> {
+    fn run_past(&mut self, addr: &str) -> Result<(), Box<dyn Error>> {
         let addr = u16::from_str_radix(addr, 16)?;
 
         while self.core.pc() <= addr {
@@ -79,13 +79,13 @@ impl Debugger {
         Ok(())
     }
 
-    fn single_step(&mut self) -> Result<(), Box<Error>> {
+    fn single_step(&mut self) -> Result<(), Box<dyn Error>> {
         self.core.step();
         self.core.print_state();
         Ok(())
     }
 
-    fn run_forever(&mut self) -> Result<(), Box<Error>> {
+    fn run_forever(&mut self) -> Result<(), Box<dyn Error>> {
         loop {
             self.core.step();
             // self.core.print_state();
@@ -97,7 +97,7 @@ impl Debugger {
         }
     }
 
-    fn add_breakpoint(&mut self, addr: &str) -> Result<(), Box<Error>> {
+    fn add_breakpoint(&mut self, addr: &str) -> Result<(), Box<dyn Error>> {
         let addr = u16::from_str_radix(addr, 16)?;
 
         self.breakpoints.insert(addr);
@@ -105,7 +105,7 @@ impl Debugger {
         Ok(())
     }
 
-    fn run_until(&mut self, addr: &str) -> Result<(), Box<Error>> {
+    fn run_until(&mut self, addr: &str) -> Result<(), Box<dyn Error>> {
         let addr = u16::from_str_radix(addr, 16)?;
 
         loop {
@@ -120,7 +120,7 @@ impl Debugger {
         Ok(())
     }
 
-    fn print_mem_u8(&mut self, addr: &str) -> Result<(), Box<Error>> {
+    fn print_mem_u8(&mut self, addr: &str) -> Result<(), Box<dyn Error>> {
         let addr = u16::from_str_radix(addr, 16)?;
         let value = self.core.peek_mem_u8(addr);
 
@@ -129,7 +129,7 @@ impl Debugger {
         Ok(())
     }
 
-    fn print_mem_u16(&mut self, addr: &str) -> Result<(), Box<Error>> {
+    fn print_mem_u16(&mut self, addr: &str) -> Result<(), Box<dyn Error>> {
         let addr = u16::from_str_radix(addr, 16)?;
         let value = self.core.peek_mem_u16(addr);
 
@@ -138,7 +138,7 @@ impl Debugger {
         Ok(())
     }
 
-    fn write_mem_u8(&mut self, addr: &str, value: &str) -> Result<(), Box<Error>> {
+    fn write_mem_u8(&mut self, addr: &str, value: &str) -> Result<(), Box<dyn Error>> {
         let addr = u16::from_str_radix(addr, 16)?;
         let value = u8::from_str_radix(value, 16)?;
 
@@ -151,7 +151,7 @@ impl Debugger {
         Ok(())
     }
 
-    fn write_mem_u16(&mut self, addr: &str, value: &str) -> Result<(), Box<Error>> {
+    fn write_mem_u16(&mut self, addr: &str, value: &str) -> Result<(), Box<dyn Error>> {
         let addr = u16::from_str_radix(addr, 16)?;
         let value = u16::from_str_radix(value, 16)?;
 
