@@ -316,6 +316,7 @@ impl Core {
         match instruction {
             ExtendedInstruction::Srl(target) => self.execute_shift_right_logical(target),
             ExtendedInstruction::Rr(target) => self.execute_rotate_right(target),
+            ExtendedInstruction::Bit(bit, target) => self.execute_bit(bit, target),
             _ => {
                 self.pc -= 2;
                 self.print_state();
@@ -519,6 +520,14 @@ impl Core {
             },
             Value::U16(value) => self.store_operand_u16(target, value - 1),
         }
+    }
+
+    pub fn execute_bit(&mut self, bit: u8, target: Operand) {
+        let value = self.load_u8_operand(target);
+        let res = value & (1 << bit);
+        self.set_flag_z(res == 0);
+        self.set_flag_n(false);
+        self.set_flag_h(true);
     }
 
     pub fn push_u16(&mut self, value: u16) {
