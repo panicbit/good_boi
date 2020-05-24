@@ -526,7 +526,7 @@ impl Core {
 
     pub fn push_u16(&mut self, value: u16) {
         self.sp -= 2;
-        self.write_mem_u16(value, self.sp)
+        self.write_mem_u16(self.sp, value)
     }
 
     pub fn pop_u16(&mut self) -> u16 {
