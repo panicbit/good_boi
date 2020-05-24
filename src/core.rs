@@ -190,6 +190,7 @@ impl Core {
             Instruction::Pop(target) => self.execute_pop(target),
             Instruction::Cp(source) => self.execute_cp(source),
             Instruction::Add(target, value) => self.execute_add(target, value),
+            Instruction::Adc(value) => self.execute_add_carry(value),
             Instruction::Sub(value) => self.execute_sub(value),
             Instruction::Inc(target) => self.execute_inc(target),
             Instruction::Dec(target) => self.execute_dec(target),
@@ -242,6 +243,39 @@ impl Core {
                 unimplemented!("execute_add: {:?} + {:?}", target, value);
             }
         }
+    }
+
+    fn execute_add_carry(&mut self, operand: Operand) {
+        let operand = self.load_u8_operand(operand);
+        let mut total_carry = false;
+        let mut total_half_carry = false;
+
+        // Add operand
+        {
+            let (result, carry) = self.reg_a.overflowing_add(operand);
+            total_carry |= carry;
+
+            let (_, half_carry) = (self.reg_a << 4).overflowing_add(operand << 4);
+            total_half_carry |= half_carry;
+
+            self.reg_a = result;
+        }
+
+        // Add 1
+        {
+            let (result, carry) = self.reg_a.overflowing_add(1);
+            total_carry |= carry;
+
+            let (_, half_carry) = (self.reg_a << 4).overflowing_add(1 << 4);
+            total_half_carry |= half_carry;
+
+            self.reg_a = result;
+        }
+
+        self.set_flag_z(self.reg_a == 0);
+        self.set_flag_n(false);
+        self.set_flag_h(total_half_carry);
+        self.set_flag_c(total_carry);
     }
 
     fn execute_sub(&mut self, value: Operand) {
