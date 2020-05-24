@@ -651,6 +651,10 @@ impl Core {
                 let ptr = self.decode_imm16();
                 self.write_mem_u8(ptr, value);
             },
+            Operand::RegRef8(reg) => {
+                let addr = 0xFF00 + self.load_u8_register(reg) as u16;
+                self.write_mem_u8(addr, value)
+            }
             _ => unimplemented!("store_operand_u8: {:?} <- {:?}", target, value)
         }
     }
