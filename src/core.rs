@@ -1,7 +1,5 @@
 use crate::instruction::{Instruction, ExtendedInstruction, Cond, Operand, Reg8, Reg16};
-use crate::mapper::Mapper;
-use crate::constants::TOTAL_RAM_SIZE;
-use crate::io::Bus;
+use crate::bus::Bus;
 
 pub struct Core {
     pc: u16,
@@ -14,15 +12,15 @@ pub struct Core {
     reg_f: u8,
     reg_h: u8,
     reg_l: u8,
-    rom: Vec<u8>,
-    ram: Vec<u8>,
+    // rom: Vec<u8>,
+    // ram: Vec<u8>,
     interrupts_enabled: bool,
-    mapper: Mapper,
+    // mapper: Mapper,
     bus: Bus,
 }
 
 impl Core {
-    pub fn new(rom: Vec<u8>) -> Self {
+    pub fn new(bus: Bus) -> Self {
         Self {
             pc: 0x100,
             sp: 0xFFFE,
@@ -34,11 +32,11 @@ impl Core {
             reg_h: 0x00,
             reg_l: 0x0D,
             reg_f: 0x80,
-            rom,
-            ram: vec![0; TOTAL_RAM_SIZE as usize],
+            // rom,
+            // ram: vec![0; TOTAL_RAM_SIZE as usize],
             interrupts_enabled: true,
-            mapper: Mapper::Rom,
-            bus: Bus::new(),
+            // mapper: Mapper::Rom,
+            bus,
         }
     }
 
@@ -158,22 +156,22 @@ impl Core {
     }
 
     pub fn print_state(&self) {
-        println!("af= {af:04X}", af = self.reg_af());
-        println!("bc= {bc:04X}", bc = self.reg_bc());
-        println!("de= {de:04X}", de = self.reg_de());
-        println!("hl= {hl:04X}", hl = self.reg_hl());
-        println!("sp= {sp:04X}", sp = self.sp);
-        println!("pc= {sp:04X}", sp = self.pc);
-        println!("nn= {nn:04X}", nn = self.peek_mem_u16(self.pc+1));
-        println!("ZNHC");
-        println!("{:04b}", self.reg_f >> 4);
+        eprintln!("af= {af:04X}", af = self.reg_af());
+        eprintln!("bc= {bc:04X}", bc = self.reg_bc());
+        eprintln!("de= {de:04X}", de = self.reg_de());
+        eprintln!("hl= {hl:04X}", hl = self.reg_hl());
+        eprintln!("sp= {sp:04X}", sp = self.sp);
+        eprintln!("pc= {sp:04X}", sp = self.pc);
+        eprintln!("nn= {nn:04X}", nn = self.peek_mem_u16(self.pc+1));
+        eprintln!("ZNHC");
+        eprintln!("{:04b}", self.reg_f >> 4);
 
         let instruction = self.current_instruction();
 
-        println!("→ {:?}", instruction);
+        eprintln!("→ {:?}", instruction);
 
         if instruction == Instruction::Extended {
-            println!("→ {:?}", self.current_extended_instruction());
+            eprintln!("→ {:?}", self.current_extended_instruction());
         }
     }
 
@@ -352,17 +350,13 @@ impl Core {
     }
 
     pub fn write_mem_u8(&mut self, addr: u16, value: u8) {
-        println!("${:04X} = {:02X}", addr, value);
+        // println!("${:04X} = {:02X}", addr, value);
 
-        if addr == 0xFF01 && value == 0x81 {
-            println!("### {}", self.ram[0xFF01] as char);
-        }
-
-        self.mapper.write_u8(&self.bus, &mut self.ram, addr, value);
+        self.bus.write(addr, value);
     }
 
     pub fn write_mem_u16(&mut self, addr: u16, value: u16) {
-        println!("${:04X} = {:04X}", addr, value);
+        // println!("${:04X} = {:04X}", addr, value);
 
         let lo = value as u8;
         let hi = (value >> 8) as u8;
@@ -372,11 +366,14 @@ impl Core {
     }
 
     pub fn peek_mem_u8(&self, addr: u16) -> u8 {
-        self.mapper.peek_u8(&self.bus, &self.rom, &self.ram, addr)
+        // TODO: either remove peeking or add peeking to bus
+        // self.mapper.peek_u8(&self.bus, &self.rom, &self.ram, addr)
+        self.bus.read(addr)
     }
 
-    fn read_mem_u8(&mut self, addr: u16) -> u8 {
-        self.mapper.read_u8(&self.bus, &self.rom, &self.ram, addr)
+    fn read_mem_u8(&self, addr: u16) -> u8 {
+        // self.mapper.read_u8(&self.bus, &self.rom, &self.ram, addr)
+        self.bus.read(addr)
     }
 
     pub fn peek_mem_u16(&self, addr: u16) -> u16 {

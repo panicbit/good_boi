@@ -3,14 +3,19 @@ extern crate good_boi;
 use std::io::Write;
 use std::error::Error;
 use std::collections::HashSet;
-use good_boi::Core;
+use good_boi::{Cartridge, Core, Bus};
 
 fn main() {
-    // let data = include_bytes!("../gb-test-roms/cpu_instrs/cpu_instrs.gb");
-    //let data = include_bytes!("../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb");
-    let data = include_bytes!("/tmp/test.gb");
+    // let rom = include_bytes!("../gb-test-roms/cpu_instrs/cpu_instrs.gb");
+    // let rom = include_bytes!("../gb-test-roms/cpu_instrs/individual/02-interrupts.gb");
+    let rom = include_bytes!("../gb-test-roms/cpu_instrs/individual/04-op r,imm.gb");
+    // let rom = include_bytes!("../gb-test-roms/cpu_instrs/individual/06-ld r,r.gb");
+    // let rom = include_bytes!("/tmp/test.gb");
 
-    Debugger::new(&data[..]).run();
+    let cartridge = Cartridge::load(&rom[..]).unwrap();
+    let bus = Bus::new(cartridge);
+
+    Debugger::new(bus).run();
 }
 
 struct Debugger {
@@ -19,9 +24,9 @@ struct Debugger {
 }
 
 impl Debugger {
-    fn new(rom: impl Into<Vec<u8>>) -> Self {
+    fn new(bus: Bus) -> Self {
         Self {
-            core: Core::new(rom.into()),
+            core: Core::new(bus),
             breakpoints: HashSet::new(),
         }
     }
@@ -83,7 +88,7 @@ impl Debugger {
     fn run_forever(&mut self) -> Result<(), Box<Error>> {
         loop {
             self.core.step();
-            self.core.print_state();
+            // self.core.print_state();
 
             if self.breakpoints.contains(&self.core.pc()) {
                 println!("Stopping at breakpoint.");
