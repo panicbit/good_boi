@@ -23,7 +23,8 @@ impl Bus {
         match addr {
             // TODO: map to boot rom initially
             0x0000..=0x7FFF => self.cartridge.read(addr),
-            0xC000..=0xDFFF => self.low_ram.read(addr),
+            0xC000..=0xDFFF => self.low_ram.read(addr - 0xC000),
+            0xE000..=0xFDFF => self.low_ram.read(addr - 0xE000),
             VRAM_START..=VRAM_END => self.unimplemented_warning.read(addr),
             0xFF01..=0xFF02 => self.serial.read(addr),
             0xFF07..=0xFFFF => self.unimplemented_warning.read(addr),
@@ -34,7 +35,8 @@ impl Bus {
     pub fn write(&mut self, addr: u16, value: u8) {
         match addr {
             0x0000..=0x7FFF => self.cartridge.write(addr, value),
-            0xC000..=0xDFFF => self.low_ram.write(addr, value),
+            0xC000..=0xDFFF => self.low_ram.write(addr - 0xC000, value),
+            0xE000..=0xFDFF => self.low_ram.write(addr - 0xE000, value),
             VRAM_START..=VRAM_END => self.unimplemented_warning.write(addr, value),
             0xFF01..=0xFF02 => self.serial.write(addr, value),
             0xFF07..=0xFFFF => self.unimplemented_warning.write(addr, value),
@@ -73,15 +75,11 @@ impl Ram {
 }
 
 impl Device for Ram {
-    fn read(&self, mut addr: u16) -> u8 {
-        addr -= self.base;
-
+    fn read(&self, addr: u16) -> u8 {
         self.data.get(addr as usize).copied().unwrap()
     }
 
-    fn write(&mut self, mut addr: u16, value: u8) {
-        addr -= self.base;
-
+    fn write(&mut self, addr: u16, value: u8) {
         if let Some(byte) = self.data.get_mut(addr as usize) {
             *byte = value;
         } else {
@@ -108,7 +106,7 @@ impl Device for Serial {
         match addr {
             0xFF01 => self.value = value,
             0xFF02 => {
-                println!("SERIAL DEBUG OUTPUT: {}", self.value as char);
+                println!("SERIAL DEBUG OUTPUT: {:?}", self.value as char);
             },
             _ => panic!(),
         }
