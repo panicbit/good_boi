@@ -351,6 +351,7 @@ impl Core {
             ExtendedInstruction::Srl(target) => self.execute_shift_right_logical(target),
             ExtendedInstruction::Rr(target) => self.execute_rotate_right(target),
             ExtendedInstruction::Bit(bit, target) => self.execute_bit(bit, target),
+            ExtendedInstruction::Rl(target) => self.execute_rl(target),
             _ => {
                 self.pc -= 2;
                 self.print_state();
@@ -562,6 +563,19 @@ impl Core {
         self.set_flag_z(res == 0);
         self.set_flag_n(false);
         self.set_flag_h(true);
+    }
+
+    pub fn execute_rl(&mut self, target: Operand) {
+        let value = self.load_u8_operand(target);
+        let carry = (value & 0x80) != 0;
+
+        let res = value << 1 | self.flag_c() as u8;
+        self.store_operand_u8(target, res);
+        self.set_flag_z(res == 0);
+        self.set_flag_n(false);
+        self.set_flag_h(false);
+        self.set_flag_c(carry);
+
     }
 
     pub fn push_u16(&mut self, value: u16) {
