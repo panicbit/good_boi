@@ -6,6 +6,7 @@ pub struct Bus {
     serial: Mutex<Serial>,
     cartridge: Mutex<Cartridge>,
     low_ram: Mutex<Ram>,
+    hi_ram: Mutex<Ram>,
     unimplemented_warning: Mutex<UnimplementedWarning>,
 }
 
@@ -15,6 +16,7 @@ impl Bus {
             serial: Mutex::new(Serial::default()),
             cartridge: Mutex::new(cartridge),
             low_ram: Mutex::new(Ram::new(LO_RAM_SIZE)),
+            hi_ram: Mutex::new(Ram::new(HI_RAM_SIZE)),
             unimplemented_warning: Mutex::new(UnimplementedWarning),
         }
     }
@@ -27,7 +29,9 @@ impl Bus {
             0xE000..=0xFDFF => self.low_ram.read(addr - 0xE000),
             VRAM_START..=VRAM_END => self.unimplemented_warning.read(addr),
             0xFF01..=0xFF02 => self.serial.read(addr),
-            0xFF07..=0xFFFF => self.unimplemented_warning.read(addr),
+            0xFF07..=0xFF7F => self.unimplemented_warning.read(addr),
+            0xFF80..=0xFFFE => self.hi_ram.read(addr - 0xFF80),
+            0xFFFF => self.unimplemented_warning.read(addr),
             _ => panic!("Invalid read @ 0x{:02X}", addr),
         }
     }
@@ -39,7 +43,9 @@ impl Bus {
             0xE000..=0xFDFF => self.low_ram.write(addr - 0xE000, value),
             VRAM_START..=VRAM_END => self.unimplemented_warning.write(addr, value),
             0xFF01..=0xFF02 => self.serial.write(addr, value),
-            0xFF07..=0xFFFF => self.unimplemented_warning.write(addr, value),
+            0xFF07..=0xFF7F => self.unimplemented_warning.write(addr, value),
+            0xFF80..=0xFFFE => self.hi_ram.write(addr - 0xFF80, value),
+            0xFFFF => self.unimplemented_warning.write(addr, value),
             _ => panic!("Invalid write @ 0x{:02X}", addr),
         }
     }
