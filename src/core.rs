@@ -578,14 +578,19 @@ impl Core {
     }
 
     pub fn push_u16(&mut self, value: u16) {
-        self.sp -= 2;
-        self.write_mem_u16(self.sp, value)
+        self.write_mem_u8(self.sp, (value >> 8) as u8);
+        self.sp -= 1;
+        self.write_mem_u8(self.sp, value as u8);
+        self.sp -= 1;
     }
 
     pub fn pop_u16(&mut self) -> u16 {
-        let value = self.read_mem_u16(self.sp);
-        self.sp += 2;
-        value
+        self.sp += 1;
+        let vh = self.read_mem_u8(self.sp) as u16;
+        self.sp += 1;
+        let vl = (self.read_mem_u8(self.sp) as u16) << 8;
+
+        vl | vh
     }
 
     pub fn evaluate_cond(&self, cond: Cond) -> bool {
