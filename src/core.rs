@@ -198,6 +198,7 @@ impl Core {
             Instruction::Xor(value) => self.execute_xor(value),
             Instruction::And(value) => self.execute_and(value),
             Instruction::Rra => self.execute_rotate_right_a(),
+            Instruction::Rla => self.execute_rotate_left_a(),
             Instruction::Ret(cond) => self.execute_ret(cond),
             Instruction::Extended => {
                 let code = self.read_mem_u8(self.pc);
@@ -332,16 +333,13 @@ impl Core {
     }
 
     fn execute_rotate_right_a(&mut self) {
-        let value = self.reg_a;
-        let carry = value & 1 == 1;
-        let value = value | self.flag_c() as u8;
-        let value = value.rotate_right(1);
+        self.execute_rotate_right(Operand::Reg8(Reg8::A));
+        self.set_flag_z(false);
+    }
 
-        self.set_flag_z(value == 0); // Some docs say Z=0
-        self.set_flag_n(false);
-        self.set_flag_h(false);
-        self.set_flag_c(carry);
-        self.reg_a = value;
+    fn execute_rotate_left_a(&mut self) {
+        self.execute_rotate_left(Operand::Reg8(Reg8::A));
+        self.set_flag_z(false);
     }
 
     fn execute_extended(&mut self, instruction: ExtendedInstruction) {
@@ -351,7 +349,7 @@ impl Core {
             ExtendedInstruction::Srl(target) => self.execute_shift_right_logical(target),
             ExtendedInstruction::Rr(target) => self.execute_rotate_right(target),
             ExtendedInstruction::Bit(bit, target) => self.execute_bit(bit, target),
-            ExtendedInstruction::Rl(target) => self.execute_rl(target),
+            ExtendedInstruction::Rl(target) => self.execute_rotate_left(target),
             _ => {
                 self.pc -= 2;
                 self.print_state();
@@ -565,7 +563,7 @@ impl Core {
         self.set_flag_h(true);
     }
 
-    pub fn execute_rl(&mut self, target: Operand) {
+    pub fn execute_rotate_left(&mut self, target: Operand) {
         let value = self.load_u8_operand(target);
         let carry = (value & 0x80) != 0;
 
