@@ -318,7 +318,7 @@ impl Core {
 
         self.set_flag_z(self.reg_a == 0);
         self.set_flag_n(false);
-        self.set_flag_h(false);
+        self.set_flag_h(true);
         self.set_flag_c(false);
     }
 
